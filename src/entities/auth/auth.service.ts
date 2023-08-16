@@ -8,12 +8,12 @@ import { AccessTokenDto, AuthCredentialsDto } from "./dto";
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UserService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) { }
 
   async signIn(creds: AuthCredentialsDto): Promise<AccessTokenDto> {
-    const user: User | undefined = await this.usersService.findOne({ name: creds.name });
+    const user: User | undefined = await this.userService.findOne({ name: creds.name });
 
     if (!user || !(await bcrypt.compare(creds.password, user.password))) {
       throw new UnauthorizedException();
@@ -29,4 +29,5 @@ export class AuthService {
       access_token: await this.jwtService.signAsync(payload),
     }
   }
+
 }

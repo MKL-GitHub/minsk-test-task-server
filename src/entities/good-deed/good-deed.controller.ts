@@ -1,12 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, Res, UseGuards } from "@nestjs/common";
-import { Request, Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
 
 import { GoodDeed } from "./good-deed.entity";
 import { GoodDeedService } from "./good-deed.service";
-import { AuthGuard } from "@entities/auth";
-import { User } from "@entities/user";
+// import { AuthGuard } from "@entities/auth";
 
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 @Controller('good_deeds')
 export class GoodDeedController {
   constructor(private readonly goodDeedService: GoodDeedService) { }
@@ -21,7 +19,7 @@ export class GoodDeedController {
 
   @Get()
   async getAll(@Req() req) {
-    return await this.goodDeedService.getAll(req.user);
+    return await this.goodDeedService.getAllByUser(req.user);
   }
 
   @Get(':id')
@@ -29,18 +27,14 @@ export class GoodDeedController {
     return await this.goodDeedService.getOneById(id);
   }
 
-  // @Put(':id')
-  // update(@Req() req: Request, @Res() res: Response) {
+  @Put(':id')
+  update(@Param('id') id: number, @Body() updatedGoodDeed: Partial<GoodDeed>) {
+    return this.goodDeedService.update(id, updatedGoodDeed);
+  }
 
-  // }
-
-  // @Patch(':id')
-  // updateField(@Req() req: Request, @Res() res: Response) {
-
-  // }
-
-  // @Delete(':id')
-  // delete(@Req() req: Request, @Res() res: Response) {
-
-  // }
+  @Delete(':id')
+  async delete(@Param('id') id: number) {
+    await this.goodDeedService.delete(id);
+    return { message: 'Доброе дело было успешно удалено' };
+  }
 }

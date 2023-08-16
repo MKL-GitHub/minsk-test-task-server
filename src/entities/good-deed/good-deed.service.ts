@@ -3,14 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 
 import { GoodDeed } from "./good-deed.entity";
 import { Repository } from "typeorm";
-import { User, UserService } from "@entities/user";
+import { User } from "@entities/user";
 
 @Injectable()
 export class GoodDeedService {
   constructor(
     @InjectRepository(GoodDeed)
     private goodDeedRepository: Repository<GoodDeed>,
-    private userService: UserService,
   ) { }
 
   async create(user: User, goodDeed: Partial<GoodDeed>): Promise<GoodDeed> {
@@ -21,7 +20,7 @@ export class GoodDeedService {
     return this.goodDeedRepository.save(newGoodDeed);
   }
 
-  async getAll(user: User): Promise<GoodDeed[]> {
+  async getAllByUser(user: User): Promise<GoodDeed[]> {
     return this.goodDeedRepository.find({ where: { user } });
   }
 
@@ -33,5 +32,14 @@ export class GoodDeedService {
     }
 
     return goodDeed;
+  }
+
+  async update(id: number, updatedGoodDeed: Partial<GoodDeed>): Promise<GoodDeed> {
+    await this.goodDeedRepository.update(id, updatedGoodDeed);
+    return this.goodDeedRepository.findOne({ where: { id } });
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.goodDeedRepository.delete(id);
   }
 }

@@ -1,16 +1,30 @@
-import { User, UserService } from "@entities/user";
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, NotFoundException } from "@nestjs/common";
+import {
+  Injectable, CanActivate, ExecutionContext,
+  UnauthorizedException, NotFoundException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from 'express';
+import { User, UserService } from "@entities/user";
+import { Reflector } from "@nestjs/core";
+import { IS_PUBLIC_KEY } from "./auth.decorators";
+
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly reflector: Reflector,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) return true;
+
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
@@ -19,17 +33,9 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(
+      request.user = await this.jwtService.verifyAsync(
         token, { secret: process.env.JWT_SECRET_KEY }
       );
-
-      const user: User | null = await this.userService.findOne({ id: payload.sub });
-
-      if (!user) {
-        throw new NotFoundException('Пользователь не найден');
-      }
-
-      request.user = user;
     } catch {
       throw new UnauthorizedException();
     }
